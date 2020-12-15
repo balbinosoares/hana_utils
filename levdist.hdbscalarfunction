@@ -1,0 +1,76 @@
+FUNCTION "Utils"."levdist" ( str1 varchar(3000), str2 varchar(3000) ) 
+	RETURNS result integer
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER AS
+BEGIN
+/***************************** 
+	Implemented lik https://en.wikipedia.org/wiki/Levenshtein_distance
+	Iterative with two matrix rows
+ *****************************/
+ 
+ declare v0 integer ARRAY;
+ declare v1 integer array;
+ declare i integer;
+ declare j integer;
+ declare str1Len integer;
+ declare str2Len integer;
+ declare delCost integer; 
+ declare insCost integer;
+ declare subsCost integer;
+ declare minCost integer;
+ 
+ declare str1Char CHARACTER;
+ declare str2Char CHARACTER;
+ 
+ 
+ 
+ select LENGTH (str1),
+ 		LENGTH (str2),
+ 		0,
+ 		0
+ 		into str1Len, str2Len, i, j
+ 		from dummy;
+ 
+ 
+ while i <= str2Len + 1 do
+ 
+ 	v0[i+1] := i; 	
+ 	i := i + 1; 
+ 
+ END WHILE ;
+ 
+
+ i:= 0; 
+ while i <= ( str1Len - 1 )  do
+ 
+    v1[1] := i + 1;  
+    j := 0;
+ 
+ 	WHILE j <= ( str2Len - 1 )  do
+ 	
+ 		delCost := :v0[ j + 2 ] + 1;
+ 		insCost := :v1[ j + 1 ] + 1;
+ 	
+ 	    select SUBSTR ( str1, i + 1, 1 ),
+ 		   SUBSTR ( str2, j + 1, 1 ) into str1Char, str2Char from dummy;
+ 	
+ 	    if str1Char = str2Char then
+ 			subsCost := :v0[j + 1];
+ 		else
+ 			subsCost := :v0[j + 1] + 1;
+ 		end if; 
+ 	
+ 		select LEAST ( delCost, insCost, subsCost ) into minCost from dummy;
+ 		v1[j+2] := minCost;
+ 		j := j + 1;
+ 	
+ 	end while;
+  
+  	v0 := :v1;
+    i := i + 1;
+ 
+ end while;
+ 
+ result := :v0[ str2Len + 1 ];
+ 
+END;
